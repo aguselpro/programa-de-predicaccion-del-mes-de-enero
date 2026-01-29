@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programa de Predicación</title>
+
+<!-- FUENTES -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg1:#6a11cb;--bg2:#8e9eab;--bg3:#2575fc;
+  --text:#111;--card:#ffffffdd;--accent:#2563eb;
+}
+body.dark{
+  --bg1:#1e1e2f;--bg2:#2c2c3a;--bg3:#111827;
+  --text:#f1f5f9;--card:#1f2937;
+}
+body{
+  margin:0;
+  font-family:"Roboto",Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));
+  min-height:100vh;
+}
+
+/* TEXTO GRANDE (>40 años + problemas visión) */
+body.large-text{
+  font-size:1.4em;
+  font-family:"Poppins","Roboto",Arial,Helvetica,sans-serif;
+  font-weight:400;
+  line-height:1.6;
+}
+
+/* TEXTO PEQUEÑO (sin problemas visión) */
+body.small-text{
+  font-size:0.95em;
+  font-family:"Roboto",Arial,Helvetica,sans-serif;
+  font-weight:300;
+}
+
+/* PANTALLA PREVIA */
+#preScreen{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,#6a11cb,#2575fc);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.preCard{
+  background:white;
+  padding:22px;
+  border-radius:16px;
+  width:320px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+.preCard h2{margin-top:0;}
+.preCard input,.preCard select,.preCard button{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+
+/* === TU DISEÑO === */
+.container{max-width:1100px;margin:auto;padding:16px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;}
+.topbar-buttons{display:flex;gap:10px;}
+button{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;background:#2563eb;color:white;font-weight:500;transition:background 0.3s;}
+button:hover{background:#1d4ed8;}
+button:active{transform:scale(0.98);}
+
+/* SLIDER FORMATO DE LETRA */
+.format-popup{
+  position:fixed;
+  top:80px;
+  right:16px;
+  background:var(--card);
+  border:2px solid var(--accent);
+  border-radius:12px;
+  padding:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+  z-index:100;
+  display:none;
+  width:220px;
+}
+.format-popup.active{display:block;}
+.format-label{font-weight:600;margin-bottom:12px;}
+.slider{
+  width:100%;
+  height:6px;
+  border-radius:3px;
+  background:#ddd;
+  outline:none;
+  -webkit-appearance:none;
+  appearance:none;
+}
+.slider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  appearance:none;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+.slider::-moz-range-thumb{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+  border:none;
+  box-shadow:0 2px 6px rgba(0,0,0,.2);
+}
+
+/* MODAL CÓDIGOS */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:1000;
+  align-items:center;
+  justify-content:center;
+}
+.modal.active{display:flex;}
+.modal-content{
+  background:var(--card);
+  border-radius:12px;
+  padding:24px;
+  max-width:500px;
+  max-height:80vh;
+  overflow-y:auto;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+}
+.modal-content h2{margin-top:0;}
+.codigos-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:16px 0;
+}
+.codigo-item{
+  background:var(--accent);
+  color:white;
+  padding:12px;
+  border-radius:8px;
+  text-align:center;
+  font-weight:600;
+  font-family:monospace;
+}
+.modal-buttons{
+  display:flex;
+  gap:10px;
+  margin-top:16px;
+}
+.modal-buttons button{flex:1;}
+
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:16px;
+}
+
+/* CUADROS DE LA 2ª PÁGINA */
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:12px;
+}
+.day-box{
+  background:var(--accent);
+  color:white;
+  border-radius:12px;
+  padding:12px;
+}
+body.dark .day-box{
+  background:#4b5563;
+}
+.day-box h3{margin:0 0 6px 0;color:white;}
+.section{margin-top:6px;border-top:1px solid #ffffff55;padding-top:6px;font-size:.9em;}
+.section-title{font-weight:bold;margin-bottom:4px;}
+.row{display:flex;justify-content:space-between;}
+.today{outline:4px solid gold;}
+</style>
+</head>
+
+<body>
+
+<!-- PANTALLA DE ENTRADA -->
+<div id="preScreen">
+  <div class="preCard">
+    <h2>Antes de entrar</h2>
+
+    <label>¿Cuántos años tiene?</label>
+    <input type="number" id="edad" placeholder="su edad">
+
+    <label>¿Tiene problemas para ver?</label>
+    <select id="vision">
+      <option value="">Seleccione…</option>
+      <option value="si">Sí</option>
+      <option value="no">No</option>
+    </select>
+
+    <button onclick="entrar()">Entrar</button>
+  </div>
+</div>
+
+<!-- TU PÁGINA -->
+<div class="container">
+
+  <div class="topbar">
+    <h2>Programa de Predicación</h2>
+    <div class="topbar-buttons">
+      <button onclick="toggleFormatMenu()">🔤 Formato de letra</button>
+      <button onclick="reiniciarPagina()">🔄 Reiniciar</button>
+      <button onclick="toggleTheme()">🌙 modo oscuro/ ☀️ modo claro</button>
+    </div>
+  </div>
+
+  <!-- POPUP FORMATO DE LETRA -->
+  <div id="formatPopup" class="format-popup">
+    <div class="format-label">Tamaño de letra</div>
+    <input type="range" id="fontSlider" class="slider" min="0.8" max="1.6" step="0.1" value="1">
+  </div>
+
+  <!-- MODAL CÓDIGOS DE REPORTE -->
+  <div id="codigosModal" class="modal">
+    <div class="modal-content">
+      <h2>📋 Códigos de Reporte</h2>
+      <p>Aquí están los 24 códigos generados. Anótalos en un lugar seguro:</p>
+      <div class="codigos-grid" id="codigosGrid"></div>
+      <div class="modal-buttons">
+        <button onclick="cerrarCodigosModal()">Entendido</button>
+        <button onclick="copiarTodosLosCodigos()" style="background:#10b981;">📋 Copiar todos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOY -->
+  <div id="todayBox" class="day-box today"></div>
+
+  <!-- TODOS LOS DÍAS -->
+  <div class="month-grid" id="grid"></div>
+
+</div>
+
+<script>
+/* ===== PANTALLA PREVIA ===== */
+function entrar(){
+  const edad=document.getElementById("edad").value;
+  const vision=document.getElementById("vision").value;
+
+  if(!edad || !vision){
+    alert("Responde las dos preguntas");
+    return;
+  }
+  // Guardar datos en localStorage
+  localStorage.setItem("userEdad", edad);
+  localStorage.setItem("userVision", vision);
+  
+  // Aplicar estilos según visión (si tiene problemas para ver → letra grande siempre)
+  if(vision==="si"){
+    document.body.classList.add("large-text");
+  }
+  
+  document.getElementById("preScreen").style.display="none";
+}
+
+/* ===== TU CÓDIGO ORIGINAL ===== */
+// Cargar datos guardados al iniciar
+function cargarDatosGuardados(){
+  const edadGuardada=localStorage.getItem("userEdad");
+  const visionGuardada=localStorage.getItem("userVision");
+  const fontSizeGuardada=localStorage.getItem("fontSize");
+  
+  if(edadGuardada && visionGuardada){
+    // Si hay datos guardados, aplicar configuración y ocultar pantalla previa
+    if(visionGuardada==="si"){
+      document.body.classList.add("large-text");
+    }
+    document.getElementById("preScreen").style.display="none";
+  } else {
+    // Si no hay datos, cargar los valores en los campos
+    if(edadGuardada){
+      document.getElementById("edad").value=edadGuardada;
+    }
+    if(visionGuardada){
+      document.getElementById("vision").value=visionGuardada;
+    }
+  }
+  
+  // Cargar formato de letra guardado
+  if(fontSizeGuardada){
+    document.documentElement.style.fontSize=fontSizeGuardada+"em";
+    document.getElementById("fontSlider").value=fontSizeGuardada;
+  }
+}
+
+// Ejecutar al cargar la página
+cargarDatosGuardados();
+
+// 24 CÓDIGOS FIJOS PARA REPORTES
+const codigosReportes=[
+  "PRED2601A", "PRED2602B", "PRED2603C", "PRED2604D", "PRED2605E", "PRED2606F",
+  "PRED2607G", "PRED2608H", "PRED2609I", "PRED2610J", "PRED2611K", "PRED2612L",
+  "PRED2613M", "PRED2614N", "PRED2615O", "PRED2616P", "PRED2617Q", "PRED2618R",
+  "PRED2619S", "PRED2620T", "PRED2621U", "PRED2622V", "PRED2623W", "PRED2624X"
+];
+
+// NOMBRES DE MESES
+const meses=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const mesActual=meses[new Date().getMonth()];
+
+// NOMBRES DE DÍAS
+const diasSemana=["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+
+// Función para obtener el día de la semana de un día específico
+function obtenerDiaSemana(dia){
+  const fecha=new Date(new Date().getFullYear(),new Date().getMonth(),dia);
+  return diasSemana[fecha.getDay()];
+}
+
+const programa={
+  19:{m:{h:"09:30",e:"Luis",t:"01",n:"Soledad"},t:{h:"18:15",e:"Héctor",t:"01",n:"Soledad"}},
+  20:{m:{h:"09:30",e:"Luis",t:"01",n:"Soledad"},t:{h:"18:15",e:"Héctor",t:"01",n:"Soledad"}},
+  21:{m:{h:"09:30",e:"Mamani",t:"02",n:"Urzua"},t:{h:"18:15",e:"Guerrero",t:"03",n:"Guerrero"}},
+  22:{},
+  23:{m:{h:"09:30",e:"Mamani",t:"02",n:"Urzua"},t:{h:"18:15",e:"Héctor",t:"04",n:"Adriana"}},
+  24:{m:{h:"09:30",e:"Luis",t:"01",n:"Soledad"},t:{h:"18:15",e:"Mamani",t:"02",n:"Urzua"}},
+  25:{m:{h:"09:30",e:"Pires",t:"05",n:"Río Coquena"},t:{h:"18:15",e:"Pires",t:"05",n:"Río Coquena"}},
+  26:{m:{h:"09:30",e:"Mamani",t:"02",n:"Urzua"},t:{h:"18:15",e:"Héctor Cárcamo",t:"—",n:"—"}},
+  27:{m:{h:"09:30",e:"Aros",t:"06",n:"Familia Aros"},t:{h:"18:15",e:"Guerrero",t:"03",n:"Guerrero"}},
+  28:{},
+  29:{m:{h:"09:30",e:"Luis",t:"01",n:"Soledad"},t:{h:"18:15",e:"Héctor",t:"01",n:"Soledad"}},
+  30:{m:{h:"09:30",e:"Mamani",t:"02",n:"Urzua"},t:{h:"18:15",e:"Héctor Cárcamo",t:"—",n:"—"}},
+  31:{m:{h:"09:30",e:"Mamani",t:"02",n:"Urzua"},t:{h:"18:15",e:"Mamani",t:"02",n:"Urzua"}}
+};
+
+const hoy=new Date().getDate();
+renderBox(document.getElementById("todayBox"),hoy,true);
+
+const grid=document.getElementById("grid");
+Object.keys(programa).forEach(d=>{
+  if(d=="1" || d=="18") return; // Saltar días 1 y 18
+  const box=document.createElement("div");
+  box.className="day-box";
+  renderBox(box,d,false);
+  grid.appendChild(box);
+});
+
+function renderBox(box,day,isToday){
+  const p=programa[day]||{};
+  const dayNum=parseInt(day);
+  let titulo="";
+  
+  if(isToday){
+    titulo="⭐ HOY ("+obtenerDiaSemana(hoy)+" "+hoy+")";
+  } else if(dayNum>=19){
+    // Días 19-31 muestran el día de la semana
+    titulo=obtenerDiaSemana(dayNum)+" "+dayNum;
+    // Capitalizar primera letra
+    titulo=titulo.charAt(0).toUpperCase()+titulo.slice(1);
+  } else {
+    // Días 1-18 muestran mes y número
+    titulo=mesActual+" "+dayNum;
+  }
+  
+  let contenido=`
+    <h3>${titulo}</h3>
+    ${section("🌅 Mañana",p.m)}
+    ${section("🌇 Tarde",p.t)}
+    <button onclick="abrirReporte(${day})" style="width:100%;margin-top:10px;background:#10b981;padding:10px;">📤 Enviar Reporte</button>
+  `;
+  
+  if(isToday && (p.m || p.t)){
+    contenido+=`<button id="explicarHoyBtn" onclick="explicarDiaDeHoy()" style="width:100%;margin-top:10px;background:#f59e0b;padding:10px;">🎤 Explicar el día de hoy</button>`;
+  }
+  
+  box.innerHTML=contenido;
+}
+function section(t,d){
+  if(!d) return `<div class="section"><em>Sin predicación</em></div>`;
+  const hora = d.h ? `<div class="row">Hora <span>${d.h}</span></div>` : '';
+  const encargado = d.e ? `<div class="row">Encargado <span>${d.e}</span></div>` : '';
+  const territorio = d.t ? `<div class="row">Territorio <span>${d.t}</span></div>` : '';
+  const casa = d.n ? `<div class="row">Casa <span>${d.n}</span></div>` : '';
+  return `
+  <div class="section">
+    <div class="section-title">${t}</div>
+    ${hora}
+    ${encargado}
+    ${territorio}
+    ${casa}
+  </div>`;
+}
+function toggleTheme(){document.body.classList.toggle("dark");}
+
+function toggleFormatMenu(){
+  const popup=document.getElementById("formatPopup");
+  popup.classList.toggle("active");
+}
+
+document.getElementById("fontSlider").addEventListener("input",function(){
+  const valor=this.value;
+  document.documentElement.style.fontSize=valor+"em";
+  localStorage.setItem("fontSize",valor);
+});
+
+function reiniciarPagina(){
+  if(confirm("¿Estás seguro? Se borrarán tu edad y respuesta sobre visión (pero se mantiene el formato de letra)")){
+    localStorage.removeItem("userEdad");
+    localStorage.removeItem("userVision");
+    location.reload();
+  }
+}
+
+function abrirReporte(dia){
+  const codigo=prompt("Ingresa tu código para enviar el reporte del día "+dia+":");
+  if(!codigo) return;
+  
+  if(codigosReportes.includes(codigo.toUpperCase())){
+    alert("✅ Reporte del día "+dia+" enviado exitosamente con el código: "+codigo.toUpperCase());
+  } else {
+    alert("❌ Código inválido. Verifica e intenta de nuevo.");
+  }
+}
+
+function mostrarCodigosReporte(){
+  const grid=document.getElementById("codigosGrid");
+  grid.innerHTML=codigosReportes.map(cod=>`<div class="codigo-item">${cod}</div>`).join("");
+  document.getElementById("codigosModal").classList.add("active");
+}
+
+function cerrarCodigosModal(){
+  document.getElementById("codigosModal").classList.remove("active");
+}
+
+function copiarTodosLosCodigos(){
+  const texto=codigosReportes.join("\n");
+  navigator.clipboard.writeText(texto).then(()=>{
+    alert("✅ Códigos copiados al portapapeles");
+  });
+}
+
+function explicarDiaDeHoy(){
+  const p=programa[hoy]||{};
+  let explicacion="El día "+hoy+" de predicación. ";
+  
+  if(p.m){
+    explicacion+=`Por la mañana a las ${p.m.h}, el grupo liderado por ${p.m.e}`;
+    if(p.m.n){ explicacion+=` y se sale de la casa ${p.m.n}`; }
+    explicacion+=`${p.m.t? ' para predicar en el territorio '+p.m.t : ''}. `;
+  }
+
+  if(p.t){
+    explicacion+=`Por la tarde a las ${p.t.h}, el grupo liderado por ${p.t.e}`;
+    if(p.t.n){ explicacion+=` y se sale de la casa ${p.t.n}`; }
+    explicacion+=`${p.t.t? ' para predicar en el territorio '+p.t.t : ''}. `;
+  }
+  
+  if(!p.m && !p.t){
+    explicacion+="No hay predicación programada para hoy.";
+  }
+  
+  // Usar Web Speech API para hablar
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel(); // Cancelar cualquier síntesis en progreso
+    const utterance=new SpeechSynthesisUtterance(explicacion);
+    utterance.lang='es-ES';
+    utterance.rate=0.9;
+    utterance.pitch=1;
+    window.speechSynthesis.speak(utterance);
+  } else {
+    alert("Tu navegador no soporta síntesis de voz. Explicación:\n\n"+explicacion);
+  }
+}
+</script>
+
+</body>
+</html>
