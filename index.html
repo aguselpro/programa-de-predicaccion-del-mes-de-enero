@@ -456,13 +456,13 @@ function explicarDiaDeHoy(){
   let explicacion="El día "+hoy+" de predicación. ";
   
   if(p.m){
-    explicacion+=`Por la mañana a las ${p.m.h}, el grupo liderado por ${p.m.e}`;
+    explicacion+=`Por la mañana a las ${p.m.h}, el grupo es liderado por ${p.m.e}`;
     if(p.m.n){ explicacion+=` y se sale de la casa ${p.m.n}`; }
     explicacion+=`${p.m.t? ' para predicar en el territorio '+p.m.t : ''}. `;
   }
 
   if(p.t){
-    explicacion+=`Por la tarde a las ${p.t.h}, el grupo liderado por ${p.t.e}`;
+    explicacion+=`Por la tarde a las ${p.t.h}, el grupo es liderado por ${p.t.e}`;
     if(p.t.n){ explicacion+=` y se sale de la casa ${p.t.n}`; }
     explicacion+=`${p.t.t? ' para predicar en el territorio '+p.t.t : ''}. `;
   }
@@ -487,3 +487,4 @@ function explicarDiaDeHoy(){
 
 </body>
 </html>
+
